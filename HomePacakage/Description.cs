@@ -10,13 +10,14 @@ namespace Client_Management_2._1
         private string filePath;
         private string fileName;
         private string extension;
+        private string distance;
 
         public Description()
         {
 
-        }
+        }      
 
-        public Description(int carId, string desc, DateTime dateTime, string filePath, string fileName, string extension)
+        public Description(int carId, string desc, DateTime dateTime, string filePath, string fileName, string extension, string distance)
         {
             this.carId = carId;
             this.desc = desc;
@@ -24,6 +25,7 @@ namespace Client_Management_2._1
             this.filePath = filePath;
             this.fileName = fileName;
             this.extension = extension;
+            this.distance = distance;
         }
 
         public int CarId { get => carId; set => carId = value; }
@@ -32,5 +34,6 @@ namespace Client_Management_2._1
         public string FilePath { get => filePath; set => filePath = value; }
         public string FileName { get => fileName; set => fileName = value; }
         public string Extension { get => extension; set => extension = value; }
+        public string Distance { get => distance; set => distance = value; }
     }
 }

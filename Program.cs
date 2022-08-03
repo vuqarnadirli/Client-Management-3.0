@@ -16,7 +16,8 @@ namespace Client_Management_2._1
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ClientManagementForm());
+            //Application.Run(new ClientManagementForm());
+            Application.Run(new SelectWindow());
         }
     }
 }
