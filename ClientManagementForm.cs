@@ -12,6 +12,7 @@ using System.IO;
 using System.Windows.Forms;
 using word = Microsoft.Office.Interop.Word;
 using System.Reflection;
+using System.Text;
 
 namespace Client_Management_2._1
 {
@@ -26,276 +27,57 @@ namespace Client_Management_2._1
         //Get all datas
         public void GetAlls()
         {
-            SqlConnection connection = AbstractDAO.Connect();
             try
             {
-                Clear();
-                CDGridView.Rows.Clear();
+                DataSetHomeTableAdapters.DataTableHomeTableAdapter dt = new DataSetHomeTableAdapters.DataTableHomeTableAdapter();
 
-                connection.Open();
-                //string query = "select Cars_tbl.*, " +
-                //    "Description_tbl.Description, Description_tbl.Datetime from Cars_tbl, Description_tbl " +
-                //    "where Cars_tbl.Id = Description_tbl.CarId";
+                CDGridView.Columns.Clear();
 
-                //string query = "select Cars_tbl.Name, Cars_tbl.Phone, Cars_tbl.Vin, Cars_tbl.Model, Cars_tbl.Engine, Cars_tbl.Carplatenumber,       " +
-                //    "Description_tbl.Description, Description_tbl.Datetime from Cars_tbl, Description_tbl " +
-                //    "where Cars_tbl.Id = Description_tbl.CarId";
-
-                string query = "select top 30 Cars_tbl.*," +
-                    "Description_tbl.Description, Description_tbl.FileName, Description_tbl.Datetime from Cars_tbl, Description_tbl " +
-                    "where Cars_tbl.Id = Description_tbl.CarId ORDER BY Cars_tbl.Id desc";
-
-
-                SqlCommand cmd = new SqlCommand(query, connection);
-                SqlDataReader dataReader = cmd.ExecuteReader();
-
-
-                int index = 0;
-
-                while (dataReader.Read())
-                {
-                    index = CDGridView.Rows.Add();
-                    CDGridView.Rows[index].Cells[0].Value = dataReader["Id"].ToString();
-                    CDGridView.Rows[index].Cells[1].Value = dataReader["Name"].ToString();
-                    CDGridView.Rows[index].Cells[2].Value = dataReader["Phone"].ToString();
-                    CDGridView.Rows[index].Cells[3].Value = dataReader["Vin"].ToString();
-                    CDGridView.Rows[index].Cells[4].Value = dataReader["Model"].ToString();
-                    CDGridView.Rows[index].Cells[5].Value = dataReader["Engine"].ToString();
-                    CDGridView.Rows[index].Cells[6].Value = dataReader["Carplatenumber"].ToString();
-                    CDGridView.Rows[index].Cells[7].Value = dataReader["Description"].ToString();
-                    CDGridView.Rows[index].Cells[8].Value = dataReader["FileName"].ToString();
-                    CDGridView.Rows[index].Cells[9].Value = dataReader["Datetime"].ToString();
-                }
-                connection.Close();
-
+                CDGridView.DataSource = dt.GetAllData();
+                CDGridView.Columns["Id"].Visible = false;
+                DesignCDGView();
                 lblTotalCount.Text = GetTotal().ToString();
-            }
-            catch (Exception ex)
-            {
-                //Logs.CreateLog(ex);
-                //MessageBox.Show("Errors, please look at log.txt file");
-                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                //throw ex;
-            }
-            finally
-            {
-                connection.Close();
-            }
-        }
-
-        //Delete data from database
-        private void btnDelete_Click(object sender, EventArgs e)
-        {
-            string vin = txt_Vin.Text;
-
-            if (vin != "" && vin.Length == 17)
-            {
-                if (PreConfirmation())
-                {
-                    Clear();
-                    FordDaoInter fordDao = Context.InstanceOfFordDao();
-                    fordDao.Delete(vin);
-
-                    GetAlls();
-                }
-            }
-            else
-            {
-                MessageBox.Show("Please, select car!");
-            }
-        }
-
-        //Search data by name            
-        private List<Ford> SearchByName(string name)
-        {
-            FordDaoInter fordDao = Context.InstanceOfFordDao();
-            List<Ford> fordList = fordDao.GetByName(name);
-            return fordList;
-        }
-
-
-        //Search data by Phone
-        private List<Ford> SerachByPhone(string phone)
-        {
-            FordDaoInter fordDao = Context.InstanceOfFordDao();
-            List<Ford> fordList = fordDao.GetByPhone(phone);
-            return fordList;
-        }
-
-        //Search data by vin      
-        private List<Ford> SearchByVin(string vin)
-        {
-            FordDaoInter fordDao = Context.InstanceOfFordDao();
-            List<Ford> fordList = fordDao.GetByVin(vin);
-            return fordList;
-        }
-
-        //Serach by car plate number        
-
-
-        private List<Ford> SearchByCarPlateNumber(string platenumber)
-        {
-
-            FordDaoInter fordDao = Context.InstanceOfFordDao();
-            List<Ford> fordList = fordDao.GetByCarPlateNumber(platenumber);
-            return fordList;
-        }
-
-        //Print data
-        private void PrintFord(List<Ford> fords)
-        {
-            CDGridView.Rows.Clear();
-
-            int index = 0;
-            for (int i = 0; i < fords.Count; i++)
-            {
-                index = CDGridView.Rows.Add();
-
-                CDGridView.Rows[index].Cells[0].Value = fords[i].Id;
-                CDGridView.Rows[index].Cells[1].Value = fords[i].Owner.Name;
-                CDGridView.Rows[index].Cells[2].Value = fords[i].Owner.Phone;
-                CDGridView.Rows[index].Cells[3].Value = fords[i].Vin;
-                CDGridView.Rows[index].Cells[4].Value = fords[i].Model;
-                CDGridView.Rows[index].Cells[5].Value = fords[i].Engine;
-                CDGridView.Rows[index].Cells[6].Value = fords[i].CarPlateNumber;
-                CDGridView.Rows[index].Cells[7].Value = fords[i].Description.Desc;
-                CDGridView.Rows[index].Cells[8].Value = fords[i].Description.FileName;
-                CDGridView.Rows[index].Cells[9].Value = fords[i].Description.DateTime;
-            }
-        }
-
-        private void PrintFord(List<Ford> fords, bool control)
-        {
-            //CDGridView.Rows.Clear();
-
-            int index = 0;
-            for (int i = 0; i < fords.Count; i++)
-            {
-                index = CDGridView.Rows.Add();
-
-                CDGridView.Rows[index].Cells[0].Value = fords[i].Id;
-                CDGridView.Rows[index].Cells[1].Value = fords[i].Owner.Name;
-                CDGridView.Rows[index].Cells[2].Value = fords[i].Owner.Phone;
-                CDGridView.Rows[index].Cells[3].Value = fords[i].Vin;
-                CDGridView.Rows[index].Cells[4].Value = fords[i].Model;
-                CDGridView.Rows[index].Cells[5].Value = fords[i].Engine;
-                CDGridView.Rows[index].Cells[6].Value = fords[i].CarPlateNumber;
-                CDGridView.Rows[index].Cells[7].Value = fords[i].Description.Desc;
-                CDGridView.Rows[index].Cells[8].Value = fords[i].Description.FileName;
-                CDGridView.Rows[index].Cells[9].Value = fords[i].Description.DateTime;
-            }
-        }
-
-
-        private void ClearAllText(Control con)
-        {
-            foreach (Control c in con.Controls)
-            {
-                if (c is TextBox)
-                {
-                    ((TextBox)c).Clear();
-                }
-                else
-                {
-                    ClearAllText(c);
-                }
-            }
-        }
-
-        private void Clear()
-        {
-            ClearAllText(this);
-            radioBtnSearchByName.Checked = false;
-            radioBtnSearchByPhone.Checked = false;
-            radioBtnSerachByVin.Checked = false;
-            radioBtnSearchByCarPlateNumber.Checked = false;
-
-            radioBtnAdd.Checked = false;
-            radioBtnEdit.Checked = false;
-            radioBtnDelete.Checked = false;
-        }
-
-        private void NumbersOnly(object sender, KeyPressEventArgs e)
-        {
-            int asciiCode = Convert.ToInt32(e.KeyChar);
-
-            if (asciiCode != 8)
-            {
-                if ((asciiCode >= 48 && asciiCode <= 57))
-                {
-                    e.Handled = false;
-                }
-                else
-                {
-                    MessageBox.Show("Number Only Please!", "Error: Number Only", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    e.Handled = true;
-                }
-            }
-        }
-
-
-        private bool PreConfirmation()
-        {
-            DialogResult iExit;
-            iExit = MessageBox.Show("Confirm if you want to delete", "Client Database", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-
-            if (iExit == DialogResult.Yes)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-
-        private void txtSearchingText_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (radioBtnSearchByPhone.Checked)
-            {
-                NumbersOnly(sender, e);
-            }
-
-        }
-
-        private void txt_Phone_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            NumbersOnly(sender, e);
-        }
-
-
-        private void btnGetAlls_Click(object sender, EventArgs e)
-        {
-            CDGridView.Rows.Clear();
-            GetAlls();
-
-        }
-
-        //Get total record from databse
-        private int GetTotal()
-        {
-            SqlConnection conn = AbstractDAO.Connect();
-            int total = 0;
-            try
-            {
-                string sql = "Select count(*) from Cars_tbl";
-
-                conn.Open();
-                SqlCommand sqlCommand = new SqlCommand(sql, conn);
-                total = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                conn.Close();
+                Clear();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally
-            {
-                conn.Close();
-            }
-            return total;
+        }
+
+        private void DesignCDGView()
+        {
+            //CDGridView.Columns["Name"].Width = 100;
+            //CDGridView.Columns["Phone"].Width = 120;
+            //CDGridView.Columns["Vin"].Width = 240;
+            //CDGridView.Columns["Model"].Width = 100;
+            //CDGridView.Columns["Engine"].Width = 80;
+            //CDGridView.Columns["Carplatenumber"].Width = 100;
+            CDGridView.Columns["Distance"].Width = 88;
+            CDGridView.Columns["Year"].Width = 60;
+            CDGridView.Columns["FileName"].Width = 100;
+            //CDGridView.Columns["Datetime"].Width = 140;
+
+            //CDGridView.Columns["Carplatenumber"].HeaderText = "Plate";
+            //CDGridView.Columns["Distance"].HeaderText = "Distance-km";
+
+
+            CDGridView.Columns["Name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            CDGridView.Columns["Phone"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            CDGridView.Columns["Vin"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //CDGridView.Columns["Model"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            CDGridView.Columns["Model"].Width = 100;
+            //CDGridView.Columns["Engine"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            CDGridView.Columns["Engine"].Width = 80;
+            CDGridView.Columns["Carplatenumber"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            //CDGridView.Columns["Distance"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            CDGridView.Columns["Description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            //CDGridView.Columns["Year"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            //CDGridView.Columns["FileName"].AutoSizeMode = DataGridViewAutoSizeColumnMode.ColumnHeader;
+            CDGridView.Columns["Datetime"].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+
+            CDGridView.Columns["Carplatenumber"].HeaderText = "Plate";
+            CDGridView.Columns["Distance"].HeaderText = "Distance-km";
         }
 
         //Add data to database
@@ -304,14 +86,14 @@ namespace Client_Management_2._1
             if (txt_Vin.Text != "")
             {
                 SqlConnection sqlConnection = AbstractDAO.Connect();
-
+                string addingVin = txt_Vin.Text.ToUpper();
                 string existvin = null;
                 try
                 {
                     string query = "Select Cars_tbl.Vin From Cars_tbl where Cars_tbl.Vin = @vin";
 
                     SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("vin", txt_Vin.Text);
+                    sqlCommand.Parameters.AddWithValue("vin", addingVin);
 
                     sqlConnection.Open();
                     existvin = Convert.ToString(sqlCommand.ExecuteScalar());
@@ -327,10 +109,11 @@ namespace Client_Management_2._1
                 }
 
 
-                if (existvin == txt_Vin.Text)
+                if (existvin == addingVin)
                 {
-                    MessageBox.Show("Already exist vin, see below.");
-                    SearchByVin(txt_Vin.Text);
+                    MessageBox.Show("Already exist vin, see below.", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    DesignAllColumnsOnCDGView();
+                    PrintFord(SearchByVin(txt_Vin.Text));
                 }
                 else
                 {
@@ -344,16 +127,20 @@ namespace Client_Management_2._1
                     string description = txt_Description.Text.TrimEnd();
                     string filePath = txtFilePath.Text;
                     DateTime dateTime = DateTime.Now;
+                    string distance = txt_Distance.Text.Trim();
+                    string year = txt_Year.Text.Trim();
 
-
-                    if (txt_Distance.Text == "")
+                    if (DesignYearText(year))
                     {
-                        MessageBox.Show("Distance not be empty!");
-                        return;
+                        return; 
                     }
-                    else
+                   
+
+
+                    if (distance == "")
                     {
-                        description = txt_Distance.Text + "-km. " + description;
+                        MessageBox.Show("Distance not be empty!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
 
                     string extn;
@@ -372,7 +159,7 @@ namespace Client_Management_2._1
                     }
                     else
                     {
-                        MessageBox.Show("File do not exist");
+                        MessageBox.Show("File do not exist", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
@@ -380,17 +167,17 @@ namespace Client_Management_2._1
 
                     if (vin == "")
                     {
-                        MessageBox.Show("Vin not be null!");
+                        MessageBox.Show("Vin not be null!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else if (vin.Length < 17)
                     {
-                        MessageBox.Show("Vin length does not match correctly!");
+                        MessageBox.Show("Vin length does not match correctly!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
-                    else
+                    else  
                     {
                         Owner owner = new Owner(name, surname, phone);
-                        Description desc = new Description(0, description, dateTime, filePath, fileName, extn);
-                        Ford ford = new Ford(0, owner, vin, model, engine, carplatenumber, desc);
+                        Description desc = new Description(0, description, dateTime, filePath, fileName, extn, distance);
+                        Ford ford = new Ford(0, owner, vin, model, engine, carplatenumber, year, desc);
 
 
                         FordDaoInter fordDao = Context.InstanceOfFordDao();
@@ -402,7 +189,7 @@ namespace Client_Management_2._1
             }
             else
             {
-                MessageBox.Show("Please, Insert information!");
+                MessageBox.Show("Please, Insert information!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -413,8 +200,7 @@ namespace Client_Management_2._1
 
             if (selectedId != 0 && (radioBtnAdd.Checked || radioBtnEdit.Checked || radioBtnDelete.Checked))
             {
-                #region
-                //Control
+                #region Control               
 
                 int control = 0;
 
@@ -474,22 +260,11 @@ namespace Client_Management_2._1
                 string carplatenumber = txt_Carplatenumber.Text.TrimEnd().ToUpper();
                 string description = txt_Description.Text.TrimEnd();
                 string filePath = txtFilePath.Text;
+                string distance = txt_Distance.Text;
+                string year = txt_Year.Text.Trim();
 
                 string extn = "";
                 string fileName = "";
-
-                //if (filePath == "" || !File.Exists(filePath))
-                //{
-                //    extn = "";
-                //    fileName = "";
-                //}
-                //else
-                //{
-                //    var file = new FileInfo(filePath);
-                //    extn = file.Extension;
-                //    fileName = file.Name;
-                //}
-
 
                 if (filePath == "")
                 {
@@ -513,8 +288,8 @@ namespace Client_Management_2._1
 
                 //Clear();              
                 Owner owner = new Owner(name, surname, phone);
-                Description desc = new Description(selectedId, description, dt, filePath, fileName, extn);
-                Ford ford = new Ford(0, owner, vin, model, engine, carplatenumber, desc);
+                Description desc = new Description(selectedId, description, dt, filePath, fileName, extn, distance);
+                Ford ford = new Ford(0, owner, vin, model, engine, carplatenumber, year, desc);
 
                 FordDaoInter fordDao = Context.InstanceOfFordDao();
                 fordDao.Update(ford, desc, selectedId, control);
@@ -528,34 +303,229 @@ namespace Client_Management_2._1
             }
         }
 
-        int selectedId;
-        string filePath;
-        DateTime dt;
-        private void CDGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        //Delete data from database
+        private void btnDelete_Click(object sender, EventArgs e)
         {
-            selectedId = Convert.ToInt32(CDGridView.CurrentRow.Cells[0].Value);
-            txt_Name.Text = CDGridView.CurrentRow.Cells[1].Value.ToString();
-            txt_Phone.Text = CDGridView.CurrentRow.Cells[2].Value.ToString();
-            txt_Vin.Text = CDGridView.CurrentRow.Cells[3].Value.ToString();
-            txt_Model.Text = CDGridView.CurrentRow.Cells[4].Value.ToString();
-            txt_Engine.Text = CDGridView.CurrentRow.Cells[5].Value.ToString();
-            txt_Carplatenumber.Text = CDGridView.CurrentRow.Cells[6].Value.ToString();
-            txt_Description.Text = CDGridView.CurrentRow.Cells[7].Value.ToString();
-            txtFilePath.Text = CDGridView.CurrentRow.Cells[8].Value.ToString();
-            filePath = CDGridView.CurrentRow.Cells[8].Value.ToString();
+            string vin = txt_Vin.Text;
 
-            dt = DateTime.Parse(CDGridView.CurrentRow.Cells[9].Value.ToString());
+            if (vin != "" && vin.Length == 17 && selectedId != 0)
+            {
+                if (PreConfirmation())
+                {
+                    Clear();
+                    FordDaoInter fordDao = Context.InstanceOfFordDao();
+                    fordDao.Delete(selectedId);
+
+                    GetAlls();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please, select car!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        //Search data by name            
+        private List<Ford> SearchByName(string name)
+        {
+            FordDaoInter fordDao = Context.InstanceOfFordDao();
+            List<Ford> fordList = fordDao.GetByName(name);
+            return fordList;
+        }
+
+
+        //Search data by Phone
+        private List<Ford> SerachByPhone(string phone)
+        {
+            FordDaoInter fordDao = Context.InstanceOfFordDao();
+            List<Ford> fordList = fordDao.GetByPhone(phone);
+            return fordList;
+        }
+
+        //Search data by vin      
+        private List<Ford> SearchByVin(string vin)
+        {
+            FordDaoInter fordDao = Context.InstanceOfFordDao();
+            List<Ford> fordList = fordDao.GetByVin(vin);
+            return fordList;
+        }
+
+        //Serach by car plate number        
+        private List<Ford> SearchByCarPlateNumber(string platenumber)
+        {
+
+            FordDaoInter fordDao = Context.InstanceOfFordDao();
+            List<Ford> fordList = fordDao.GetByCarPlateNumber(platenumber);
+            return fordList;
+        }
+
+        //Print data
+        private void PrintFord(List<Ford> fords)
+        {
+            int index = 0;
+            for (int i = 0; i < fords.Count; i++)
+            {
+                index = CDGridView.Rows.Add();
+                CDGridView.Columns["Id"].Visible = false;
+                CDGridView.Rows[index].Cells["Id"].Value = fords[i].Id;
+                CDGridView.Rows[index].Cells["Name"].Value = fords[i].Owner.Name;
+                CDGridView.Rows[index].Cells["Phone"].Value = fords[i].Owner.Phone;
+                CDGridView.Rows[index].Cells["Vin"].Value = fords[i].Vin;
+                CDGridView.Rows[index].Cells["Model"].Value = fords[i].Model;
+                CDGridView.Rows[index].Cells["Engine"].Value = fords[i].Engine;
+                CDGridView.Rows[index].Cells["Carplatenumber"].Value = fords[i].CarPlateNumber;
+                CDGridView.Rows[index].Cells["Distance"].Value = fords[i].Description.Distance;
+                CDGridView.Rows[index].Cells["Year"].Value = fords[i].Year;
+                CDGridView.Rows[index].Cells["Description"].Value = fords[i].Description.Desc;
+                CDGridView.Rows[index].Cells["FileName"].Value = fords[i].Description.FileName;
+                CDGridView.Rows[index].Cells["Datetime"].Value = fords[i].Description.DateTime;
+            }
+        }
+
+
+        private void ClearAllText(Control con)
+        {
+            foreach (Control c in con.Controls)
+            {
+                if (c is TextBox)
+                {
+                    ((TextBox)c).Clear();
+                }
+                else
+                {
+                    ClearAllText(c);
+                }
+            }
+        }
+
+        private void Clear()
+        {
+            txt_Name.Text = string.Empty;
+            txt_Phone.Text = string.Empty;
+            txt_Vin.Text = string.Empty;
+            txt_Model.Text = string.Empty;
+            txt_Engine.Text = string.Empty;
+            txt_Carplatenumber.Text = string.Empty;
+            txt_Distance.Text = string.Empty;
+            txt_Year.Text = string.Empty;
+            txt_Description.Text = string.Empty;
+            txtFilePath.Text = string.Empty;
+            txtSearchingText.Text = string.Empty;
+
+            radioBtnSearchByName.Checked = false;
+            radioBtnSearchByPhone.Checked = false;
+            radioBtnSerachByVin.Checked = false;
+            radioBtnSearchByCarPlateNumber.Checked = false;
+
+            radioBtnAdd.Checked = false;
+            radioBtnEdit.Checked = false;
+            radioBtnDelete.Checked = false;
+        }
+
+        private void NumbersOnly(object sender, KeyPressEventArgs e)
+        {
+            int asciiCode = Convert.ToInt32(e.KeyChar);
+
+            if (asciiCode != 8)
+            {
+                if ((asciiCode >= 48 && asciiCode <= 57))
+                {
+                    e.Handled = false;
+                }
+                else
+                {
+                    MessageBox.Show("Number Only Please!", "Error: Number Only", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private bool PreConfirmation()
+        {
+            DialogResult iExit;
+            iExit = MessageBox.Show("Confirm if you want to delete", "Client Database", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+            if (iExit == DialogResult.Yes)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        private void txtSearchingText_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (radioBtnSearchByPhone.Checked)
+            {
+                NumbersOnly(sender, e);
+            }
+
+        }
+
+        private void txt_Phone_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            NumbersOnly(sender, e);
+        }
+
+        private void btnGetAlls_Click(object sender, EventArgs e)
+        {
+            GetAlls();
+        }
+
+        //Get total record from databse
+        private int GetTotal()
+        {
+            SqlConnection conn = AbstractDAO.Connect();
+            int total = 0;
+            try
+            {
+                string sql = "Select count(*) from Cars_tbl";
+
+                conn.Open();
+                SqlCommand sqlCommand = new SqlCommand(sql, conn);
+                total = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return total;
         }
 
 
 
-        //private void CDGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        //{
-        //    //foreach (DataGridViewRow row in CDGridView.Rows)
-        //    //{
-        //    //    row.DefaultCellStyle.BackColor = SystemColors.Info;
-        //    //}
-        //}
+
+
+
+
+        int selectedId = 0;
+        string filePath;
+        DateTime dt;
+        private void CDGridView_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            selectedId = Convert.ToInt32(CDGridView.CurrentRow.Cells["Id"].Value);
+            txt_Name.Text = CDGridView.CurrentRow.Cells["Name"].Value.ToString();
+            txt_Phone.Text = CDGridView.CurrentRow.Cells["Phone"].Value.ToString();
+            txt_Vin.Text = CDGridView.CurrentRow.Cells["Vin"].Value.ToString();
+            txt_Model.Text = CDGridView.CurrentRow.Cells["Model"].Value.ToString();
+            txt_Engine.Text = CDGridView.CurrentRow.Cells["Engine"].Value.ToString();
+            txt_Carplatenumber.Text = CDGridView.CurrentRow.Cells["Carplatenumber"].Value.ToString();
+            txt_Distance.Text = CDGridView.CurrentRow.Cells["Distance"].Value.ToString();
+            txt_Year.Text = CDGridView.CurrentRow.Cells["Year"].Value.ToString();
+            txt_Description.Text = CDGridView.CurrentRow.Cells["Description"].Value.ToString();
+            txtFilePath.Text = CDGridView.CurrentRow.Cells["FileName"].Value.ToString();
+            dt = DateTime.Parse(CDGridView.CurrentRow.Cells["Datetime"].Value.ToString());
+
+            filePath = CDGridView.CurrentRow.Cells["FileName"].Value.ToString();
+        }
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
@@ -567,11 +537,12 @@ namespace Client_Management_2._1
                 {
                     List<BlackClient> blackList = BlackClientSearchByVin(searchingtext.ToUpper());
                     List<Ford> fordList = SearchByVin(searchingtext.ToUpper());
+                    DesignAllColumnsOnCDGView();
 
                     if (blackList.Count != 0)
                     {
                         PrintBlackClient(blackList, true);
-                        PrintFord(fordList, true);
+                        PrintFord(fordList);
                     }
                     else
                     {
@@ -583,11 +554,12 @@ namespace Client_Management_2._1
                 {
                     List<BlackClient> blackList = BlackClientSearchByName(searchingtext);
                     List<Ford> fordList = SearchByName(searchingtext.ToUpper());
+                    DesignAllColumnsOnCDGView();
 
                     if (blackList.Count != 0)
                     {
                         PrintBlackClient(blackList, true);
-                        PrintFord(fordList, true);
+                        PrintFord(fordList);
 
                     }
                     else
@@ -597,13 +569,15 @@ namespace Client_Management_2._1
                 }
                 else if (radioBtnSearchByPhone.Checked)
                 {
+
                     List<BlackClient> blackList = BlackSearchByCPNumber(searchingtext.ToUpper());
                     List<Ford> fordList = SerachByPhone(searchingtext);
+                    DesignAllColumnsOnCDGView();
 
                     if (blackList.Count != 0)
                     {
                         PrintBlackClient(blackList, true);
-                        PrintFord(fordList, true);
+                        PrintFord(fordList);
                     }
                     else
                     {
@@ -614,11 +588,12 @@ namespace Client_Management_2._1
                 {
                     List<BlackClient> blackList = BlackSearchByCPNumber(searchingtext.ToUpper());
                     List<Ford> fordList = SearchByCarPlateNumber(searchingtext.ToUpper());
+                    DesignAllColumnsOnCDGView();
 
                     if (blackList.Count != 0)
                     {
                         PrintBlackClient(blackList, true);
-                        PrintFord(fordList, true);
+                        PrintFord(fordList);
 
                     }
                     else
@@ -629,33 +604,37 @@ namespace Client_Management_2._1
             }
             else
             {
-                MessageBox.Show("Please check searching cell!");
+                MessageBox.Show("Please check searching cell!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
-
-        private void tabControl_Selected(object sender, TabControlEventArgs e)
+        private void DesignAllColumnsOnCDGView()
         {
-            if (e.TabPageIndex == 1)
-            {
-                GetAllOrders();
-            }
-            if (e.TabPageIndex == 2)
-            {
-                GetAllBlackClient();
-            }
-        }
+            CDGridView.DataSource = null;
+            CDGridView.Columns.Clear();
 
+            CDGridView.Columns.Add("Id", "Id");
+            CDGridView.Columns.Add("Name", "Name");
+            CDGridView.Columns.Add("Phone", "Phone");
+            CDGridView.Columns.Add("Vin", "Vin");
+            CDGridView.Columns.Add("Model", "Model");
+            CDGridView.Columns.Add("Engine", "Engine");
+            CDGridView.Columns.Add("Carplatenumber", "Carplatenumber");
+            CDGridView.Columns.Add("Distance", "Distance");
+            CDGridView.Columns.Add("Year", "Year");
+            CDGridView.Columns.Add("Description", "Description");
+            CDGridView.Columns.Add("FileName", "FileName");
+            CDGridView.Columns.Add("Datetime", "Datetime");
+
+            CDGridView.Columns["Carplatenumber"].HeaderText = "Plate";
+            CDGridView.Columns["Distance"].HeaderText = "Distance-km";
+        }
         private void ClientManagementForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             try
             {
-                //Application.Exit();
                 string pathString = @"C:\ClientManagementDocuments";
-
                 DirectoryInfo dir = new DirectoryInfo(pathString);
-                //int count = dir.GetFiles().Length;
-                //MessageBox.Show(count.ToString());
 
                 foreach (FileInfo file in dir.GetFiles())
                 {
@@ -677,13 +656,13 @@ namespace Client_Management_2._1
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
-            if (filePath != "" && txtFilePath.Text != "")
+            if (filePath != "")
             {
                 OpenFile(selectedId);
             }
             else
             {
-                MessageBox.Show("File not found!");
+                MessageBox.Show("File not found!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
         }
@@ -718,9 +697,6 @@ namespace Client_Management_2._1
             }
             catch (Exception ex)
             {
-                //Logs.CreateLog(ex);
-                //MessageBox.Show("Errors, please look at log.txt file");
-                //throw ex;
                 MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -756,12 +732,10 @@ namespace Client_Management_2._1
                     File.WriteAllBytes(pathString, data);
                     return pathString;
                 }
-                
-
             }
             catch (Exception ex)
             {
-              
+
                 MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -773,10 +747,18 @@ namespace Client_Management_2._1
 
         private void ClientManagementForm_Load(object sender, EventArgs e)
         {
-            txt_Name.Select();
-            //AbstractDAO.url = File.ReadAllText(@"C:\Program Files (x86)\Blackwolf Company\DatabaseConnection\config.txt");
-            AbstractDAO.url = @"Data Source=.;Initial Catalog=ClientDatabaseManagementSystem;Integrated Security=True";
-            GetAlls();
+            //Data Source=.;Initial Catalog=ClientDatabaseManagementSystem;Integrated Security=True
+            try
+            {
+                AbstractDAO.url = File.ReadAllText(@"C:\Program Files (x86)\Blackwolf Company\DatabaseConnection\config.txt");
+                //AbstractDAO.url = @"Data Source=.;Initial Catalog=ClientDatabaseManagementSystem;Integrated Security=True";
+                GetAlls();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
         }
 
         public bool Export<T>(List<T> list, string file, string sheetName)
@@ -857,7 +839,6 @@ namespace Client_Management_2._1
 
                 string query = "SELECT Cars_tbl.Name, Cars_tbl.Phone, Cars_tbl.Vin, Cars_tbl.Model, Cars_tbl.Engine, Cars_tbl.Carplatenumber FROM Cars_tbl";
 
-
                 SqlCommand cmd = new SqlCommand(query, connection);
                 SqlDataReader dataReader = cmd.ExecuteReader();
 
@@ -914,9 +895,8 @@ namespace Client_Management_2._1
                             }
                             else
                             {
-                                MessageBox.Show("error");
+                                MessageBox.Show("Error", "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -945,7 +925,7 @@ namespace Client_Management_2._1
                             }
                             else
                             {
-                                MessageBox.Show("Error");
+                                MessageBox.Show("Error", "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                         catch (Exception ex)
@@ -1130,7 +1110,13 @@ namespace Client_Management_2._1
 
         private void ClearOrdersTab()
         {
-            ClearAllText(this);
+            //ClearAllText(this);
+            txtOrderName.Text = string.Empty;
+            txtOrderPhone.Text = string.Empty;
+            txtOrderCPNumber.Text = string.Empty;
+            txtOrders.Text = string.Empty;
+            txtOrderSearchingText.Text = string.Empty;
+
             radioBtnOrdersName.Checked = false;
             radioBtnOrdersPhone.Checked = false;
             radioBtnOrderCPNumber.Checked = false;
@@ -1227,11 +1213,6 @@ namespace Client_Management_2._1
             }
         }
 
-
-
-
-
-
         #endregion
 
         #region Black
@@ -1316,7 +1297,12 @@ namespace Client_Management_2._1
 
         private void ClearBlackClientTab()
         {
-            ClearAllText(this);
+            //ClearAllText(this);
+            txtBlackName.Text = string.Empty;
+            txtBlackPhone.Text = string.Empty;
+            txtBlackVin.Text = string.Empty;
+            txtBlackCPNumber.Text = string.Empty;
+
             radioBtnBlackVin.Checked = false;
             radioBtnBlackName.Checked = false;
             radioBtnBlackPhone.Checked = false;
@@ -1504,23 +1490,24 @@ namespace Client_Management_2._1
 
         private void PrintBlackClient(List<BlackClient> blackClients, bool control)
         {
-            CDGridView.Rows.Clear();
-
             int index = 0;
             for (int i = 0; i < blackClients.Count; i++)
             {
                 index = CDGridView.Rows.Add();
 
-                CDGridView.Rows[index].Cells[0].Value = blackClients[i].Id;
-                CDGridView.Rows[index].Cells[1].Value = blackClients[i].Name;
-                CDGridView.Rows[index].Cells[2].Value = blackClients[i].Phone;
-                CDGridView.Rows[index].Cells[3].Value = blackClients[i].Vin;
-                CDGridView.Rows[index].Cells[4].Value = "Null";
-                CDGridView.Rows[index].Cells[5].Value = "Null";
-                CDGridView.Rows[index].Cells[6].Value = blackClients[i].Cpnumber;
-                CDGridView.Rows[index].Cells[7].Value = blackClients[i].Description;
-                CDGridView.Rows[index].Cells[8].Value = "";
-                CDGridView.Rows[index].Cells[9].Value = blackClients[i].DateTime;
+                CDGridView.Columns["Id"].Visible = false;
+                CDGridView.Rows[index].Cells["Id"].Value = blackClients[i].Id;
+                CDGridView.Rows[index].Cells["Name"].Value = blackClients[i].Name;
+                CDGridView.Rows[index].Cells["Phone"].Value = blackClients[i].Phone;
+                CDGridView.Rows[index].Cells["Vin"].Value = blackClients[i].Vin;
+                CDGridView.Rows[index].Cells["Model"].Value = "";
+                CDGridView.Rows[index].Cells["Engine"].Value = "";
+                CDGridView.Rows[index].Cells["Carplatenumber"].Value = blackClients[i].Cpnumber;
+                CDGridView.Rows[index].Cells["Distance"].Value = "";
+                CDGridView.Rows[index].Cells["Year"].Value = "";
+                CDGridView.Rows[index].Cells["Description"].Value = blackClients[i].Description;
+                CDGridView.Rows[index].Cells["FileName"].Value = "";
+                CDGridView.Rows[index].Cells["Datetime"].Value = blackClients[i].DateTime;
 
                 CDGridView.Rows[index].DefaultCellStyle.BackColor = Color.Red;
                 CDGridView.Rows[index].DefaultCellStyle.ForeColor = Color.White;
@@ -1540,7 +1527,6 @@ namespace Client_Management_2._1
             }
         }
 
-
         #endregion
 
 
@@ -1551,19 +1537,19 @@ namespace Client_Management_2._1
 
         private void CDGridView_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            nameStr = CDGridView.CurrentRow.Cells[1].Value.ToString();
-            phoneStr = CDGridView.CurrentRow.Cells[2].Value.ToString();
-            vinStr = CDGridView.CurrentRow.Cells[3].Value.ToString();
-            plateStr = CDGridView.CurrentRow.Cells[6].Value.ToString();
+            nameStr = CDGridView.CurrentRow.Cells["Name"].Value.ToString();
+            phoneStr = CDGridView.CurrentRow.Cells["Phone"].Value.ToString();
+            vinStr = CDGridView.CurrentRow.Cells["Vin"].Value.ToString();
+            plateStr = CDGridView.CurrentRow.Cells["Carplatenumber"].Value.ToString();
         }
 
         private void CDGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            int selectedid = Convert.ToInt32(CDGridView.CurrentRow.Cells[0].Value);
-            int cellIndex = CDGridView.CurrentCell.ColumnIndex;
+            int selectedid = Convert.ToInt32(CDGridView.CurrentRow.Cells["Id"].Value);
+            string cellName = CDGridView.CurrentCell.OwningColumn.Name;
             string filename = CDGridView.CurrentCell.Value.ToString();
 
-            if (cellIndex != 8)
+            if (cellName != "FileName")
             {
                 return;
             }
@@ -1574,7 +1560,7 @@ namespace Client_Management_2._1
             }
             else
             {
-                MessageBox.Show("File not found!");
+                MessageBox.Show("File not found!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -1606,629 +1592,735 @@ namespace Client_Management_2._1
                 txtBlackPhone.Text = phoneStr;
                 txtBlackVin.Text = vinStr;
                 txtBlackCPNumber.Text = plateStr;
-
-
             }
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
         {
-            //PrintDialog pdlg = new PrintDialog();
-            //pdlg.Document = printDocument1;
+            btnPrint.Enabled = false;
 
-            //DialogResult result = pdlg.ShowDialog();
-
-            //if (result == DialogResult.OK)
-            //{
-            //    printDocument1.Print();
-            //}
-
-            //if (txt_Vin.Text != "" && txt_Description.Text != "")
-            //{
-            //    printPreviewHomePageDialog.Document = printHomePageDocument;
-            //    printPreviewHomePageDialog.ShowDialog();
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Please, Select client!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            //}
-
-            //System.Diagnostics.Process.Start(pathString);
-
-            //string pathString = @"C:\ClientManagementDocuments\Hello Vuqar.docx";
-            ////Directory.CreateDirectory(pathString);
-            ////pathString = Path.Combine(pathString, "Hello Vuqar");
-
-            //System.Diagnostics.Process.Start(pathString);
-
-
-            if (txt_Vin.Text != "" && txt_Description.Text != "")
+            try
             {
-                string name;
-                string phone;
-                string model;
-                string engine;
-                string plate;
-                string distance;
-
-                name = txt_Name.Text;
-                phone = txt_Phone.Text;
-                model = txt_Model.Text;
-                engine = txt_Engine.Text;
-                plate = txt_Carplatenumber.Text;
-                distance = txt_Distance.Text;
-
-                if (name == "")
+                if (txt_Vin.Text != "" && txt_Description.Text != "")
                 {
-                    name = "Null";
-                }
+                    string name;
+                    string phone;
+                    string model;
+                    string engine;
+                    string plate;
+                    string distance;
 
-                if (phone == "")
-                {
-                    phone = "Null";
-                }
+                    name = txt_Name.Text;
+                    phone = txt_Phone.Text;
+                    model = txt_Model.Text;
+                    engine = txt_Engine.Text;
+                    plate = txt_Carplatenumber.Text;
+                    distance = txt_Distance.Text;
 
-                if (model == "")
-                {
-                    model = "Null";
-                }
-
-                if (engine == "")
-                {
-                    engine = "Null";
-                }
-
-                if (plate == "")
-                {
-                    plate = "Null";
-                }
-
-                //if (distance == "")
-                //{
-                //    distance = "Null";
-                //}
-
-                string dtcFilePath;
-                string dtcFileText = null;
-
-                if (filePath != "" && txtFilePath.Text != "")
-                {
-                    dtcFilePath = GetFilePath(selectedId);
-                   
-                    string[] array = File.ReadAllLines(dtcFilePath);                    
-                   
-                    for (int i = 0; i < array.Length; i++)
+                    if (name == "")
                     {
-                        if (array[i].Contains("=") && !array[i].Contains("None") && !array[i].Contains("END"))
+                        name = "Null";
+                    }
+
+                    if (phone == "")
+                    {
+                        phone = "Null";
+                    }
+
+                    if (model == "")
+                    {
+                        model = "Null";
+                    }
+
+                    if (engine == "")
+                    {
+                        engine = "Null";
+                    }
+
+                    if (plate == "")
+                    {
+                        plate = "Null";
+                    }
+
+                    if (distance == "")
+                    {
+                        distance = "Null";
+                    }
+                    else
+                    {
+                        distance = distance + " km";
+                    }
+
+                    string dtcFilePath;
+                    string dtcFileText = null;
+
+                    if (filePath != "" && txtFilePath.Text != "")
+                    {
+                        dtcFilePath = GetFilePath(selectedId);
+                        StringBuilder builder = new StringBuilder();
+                        string[] array = File.ReadAllLines(dtcFilePath);
+
+                        for (int i = 0; i < array.Length; i++)
                         {
-                            richTextBox1.AppendText(array[i] + Environment.NewLine);
-                            richTextBox1.AppendText(array[i + 1] + Environment.NewLine);
-                            richTextBox1.AppendText(array[i + 8] + Environment.NewLine);                            
+                            if (array[i].Contains("=") && !array[i].Contains("None") && !array[i].Contains("END") && !array[i].Contains("OBDII"))
+                            {
+                                builder.Append(array[i]);
+                                builder.Append(Environment.NewLine);
+                                builder.Append(array[i + 1]);
+                                builder.Append(Environment.NewLine);
+
+                                for (int j = i + 2; j < i + 10; j++)
+                                {
+                                    if (array[j].Contains("Lamp is On") || array[j].Contains("Lamp is Off"))
+                                    {
+                                        builder.Append(array[j]);
+                                        builder.Append(Environment.NewLine);
+                                    }
+                                }
+                            }
+                        }
+
+                        dtcFileText = builder.ToString();
+
+                        if (dtcFileText == "")
+                        {
+                            dtcFileText = "Successful DTC reading, no error codes found!";
                         }
                     }
 
-                    dtcFileText = richTextBox1.Text;                    
-                }
+                    if (dtcFileText != "" && dtcFileText != null)
+                    {
+                        try
+                        {
+                            int spaceAfter = 6;
+                            //int spaceAfterDTC = 0;
+
+                            object omissing = Missing.Value;
+
+                            object dokumansonu = "\\endofdoc";
+
+                            word.Application oWord;
+                            word.Document internalText;
+
+                            oWord = new word.Application();
+                            oWord.Visible = false;
+                            internalText = oWord.Documents.Add(ref omissing);
+
+                            word.Paragraph paragraphHeading;
+                            paragraphHeading = internalText.Content.Paragraphs.Add(ref omissing);
+                            paragraphHeading.Range.Text = "FORD Club Azerbaijan";
+                            paragraphHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphCenter;
+                            paragraphHeading.Range.Font.Bold = 1;
+                            paragraphHeading.Range.Font.Size = 20;
+                            paragraphHeading.Range.Font.Name = "Times New Roman";
+                            paragraphHeading.Format.SpaceAfter = 10;
+                            paragraphHeading.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphResult;
+                            object hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphResult = internalText.Content.Paragraphs.Add(ref hedef);
+                            paragraphResult.Range.Text = "Diaqnostika Nəticəsi:";
+                            paragraphResult.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphResult.Range.Font.Bold = 1;
+                            paragraphResult.Range.Font.Size = 16;
+                            paragraphResult.Range.Font.Name = "Times New Roman";
+                            paragraphResult.Format.SpaceAfter = 10;
+                            paragraphResult.Range.InsertParagraphAfter();
 
 
-                if (dtcFileText != "" && dtcFileText != null)
-                {
-                    object omissing = Missing.Value;
+                            word.Paragraph paragraphDateTime;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDateTime = internalText.Content.Paragraphs.Add(ref hedef);
+                            string timeText = "Tarix - " + DateTime.Now;
+                            paragraphDateTime.Range.Text = timeText;
+                            paragraphDateTime.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDateTime.Range.Font.Bold = 0;
+                            paragraphDateTime.Range.Font.Size = 12;
+                            paragraphDateTime.Range.Font.Name = "Times New Roman";
+                            paragraphDateTime.Format.SpaceAfter = spaceAfter;
 
-                    object dokumansonu = "\\endofdoc";
+                            object objTimeStart = paragraphDateTime.Range.Start;
+                            object objTimeEnd = paragraphDateTime.Range.Start + timeText.IndexOf("-");
+                            word.Range rngTimeBold = internalText.Range(ref objTimeStart, ref objTimeEnd);
+                            rngTimeBold.Bold = 1;
 
-                    word.Application oWord;
-                    word.Document internalText;
-
-                    oWord = new word.Application();
-                    oWord.Visible = false;
-                    internalText = oWord.Documents.Add(ref omissing);
-
-                    word.Paragraph paragraphHeading;
-                    paragraphHeading = internalText.Content.Paragraphs.Add(ref omissing);
-                    paragraphHeading.Range.Text = "FORD Club Azerbaijan";
-                    paragraphHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphCenter;
-                    paragraphHeading.Range.Font.Bold = 1;
-                    paragraphHeading.Range.Font.Size = 20;
-                    paragraphHeading.Range.Font.Name = "Times New Roman";
-                    paragraphHeading.Format.SpaceAfter = 10;
-                    paragraphHeading.Range.InsertParagraphAfter();
-
-                    word.Paragraph paragraphResult;
-                    object hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphResult = internalText.Content.Paragraphs.Add(ref hedef);
-                    paragraphResult.Range.Text = "Diaqnostika Nəticəsi:";
-                    paragraphResult.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphResult.Range.Font.Bold = 1;
-                    paragraphResult.Range.Font.Size = 16;
-                    paragraphResult.Range.Font.Name = "Times New Roman";
-                    paragraphResult.Format.SpaceAfter = 10;
-                    paragraphResult.Range.InsertParagraphAfter();
+                            paragraphDateTime.Range.InsertParagraphAfter();
 
 
-                    word.Paragraph paragraphDateTime;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDateTime = internalText.Content.Paragraphs.Add(ref hedef);
-                    string timeText = "Tarix - " + DateTime.Now;
-                    paragraphDateTime.Range.Text = timeText;
-                    paragraphDateTime.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDateTime.Range.Font.Bold = 0;
-                    paragraphDateTime.Range.Font.Size = 12;
-                    paragraphDateTime.Range.Font.Name = "Times New Roman";
-                    paragraphDateTime.Format.SpaceAfter = 10;
+                            word.Paragraph paragraphName;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphName = internalText.Content.Paragraphs.Add(ref hedef);
+                            string nameText = "Ad - " + name;
+                            paragraphName.Range.Text = nameText;
+                            paragraphName.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphName.Range.Font.Bold = 0;
+                            paragraphName.Range.Font.Size = 12;
+                            paragraphName.Range.Font.Name = "Times New Roman";
+                            paragraphName.Format.SpaceAfter = spaceAfter;
 
-                    object objTimeStart = paragraphDateTime.Range.Start;
-                    object objTimeEnd = paragraphDateTime.Range.Start + timeText.IndexOf("-");
-                    word.Range rngTimeBold = internalText.Range(ref objTimeStart, ref objTimeEnd);
-                    rngTimeBold.Bold = 1;
+                            object objNameStart = paragraphName.Range.Start;
+                            object objNameEnd = paragraphName.Range.Start + nameText.IndexOf("-");
+                            word.Range rngNameBold = internalText.Range(ref objNameStart, ref objNameEnd);
+                            rngNameBold.Bold = 1;
 
-                    paragraphDateTime.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphName;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphName = internalText.Content.Paragraphs.Add(ref hedef);
-                    string nameText = "Ad - " + name;
-                    paragraphName.Range.Text = nameText;
-                    paragraphName.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphName.Range.Font.Bold = 0;
-                    paragraphName.Range.Font.Size = 12;
-                    paragraphName.Range.Font.Name = "Times New Roman";
-                    paragraphName.Format.SpaceAfter = 10;
-
-                    object objNameStart = paragraphName.Range.Start;
-                    object objNameEnd = paragraphName.Range.Start + nameText.IndexOf("-");
-                    word.Range rngNameBold = internalText.Range(ref objNameStart, ref objNameEnd);
-                    rngNameBold.Bold = 1;
-
-                    paragraphName.Range.InsertParagraphAfter();
+                            paragraphName.Range.InsertParagraphAfter();
 
 
-                    word.Paragraph paragraphPhone;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphPhone = internalText.Content.Paragraphs.Add(ref hedef);
-                    string phoneText = "Tel - " + phone;
-                    paragraphPhone.Range.Text = phoneText;
-                    paragraphPhone.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphPhone.Range.Font.Bold = 0;
-                    paragraphPhone.Range.Font.Size = 12;
-                    paragraphPhone.Range.Font.Name = "Times New Roman";
-                    paragraphPhone.Format.SpaceAfter = 10;
+                            word.Paragraph paragraphPhone;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphPhone = internalText.Content.Paragraphs.Add(ref hedef);
+                            string phoneText = "Tel - " + phone;
+                            paragraphPhone.Range.Text = phoneText;
+                            paragraphPhone.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphPhone.Range.Font.Bold = 0;
+                            paragraphPhone.Range.Font.Size = 12;
+                            paragraphPhone.Range.Font.Name = "Times New Roman";
+                            paragraphPhone.Format.SpaceAfter = spaceAfter;
 
-                    object objPhoneStart = paragraphPhone.Range.Start;
-                    object objPhoneEnd = paragraphPhone.Range.Start + phoneText.IndexOf("-");
-                    word.Range rngPhoneBold = internalText.Range(ref objPhoneStart, ref objPhoneEnd);
-                    rngPhoneBold.Bold = 1;
+                            object objPhoneStart = paragraphPhone.Range.Start;
+                            object objPhoneEnd = paragraphPhone.Range.Start + phoneText.IndexOf("-");
+                            word.Range rngPhoneBold = internalText.Range(ref objPhoneStart, ref objPhoneEnd);
+                            rngPhoneBold.Bold = 1;
 
-                    paragraphPhone.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphVin;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphVin = internalText.Content.Paragraphs.Add(ref hedef);
-                    string vinText = "Vin - " + txt_Vin.Text;
-                    paragraphVin.Range.Text = vinText;
-                    paragraphVin.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphVin.Range.Font.Bold = 0;
-                    paragraphVin.Range.Font.Size = 12;
-                    paragraphVin.Range.Font.Name = "Times New Roman";
-                    paragraphVin.Format.SpaceAfter = 10;
-
-                    object objVinStart = paragraphVin.Range.Start;
-                    object objVinEnd = paragraphVin.Range.Start + vinText.IndexOf("-");
-                    word.Range rngVinBold = internalText.Range(ref objVinStart, ref objVinEnd);
-                    rngVinBold.Bold = 1;
-
-                    paragraphVin.Range.InsertParagraphAfter();
+                            paragraphPhone.Range.InsertParagraphAfter();
 
 
-                    word.Paragraph paragraphModel;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphModel = internalText.Content.Paragraphs.Add(ref hedef);
-                    string modelText = "Model - " + model;
-                    paragraphModel.Range.Text = modelText;
-                    paragraphModel.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphModel.Range.Font.Bold = 0;
-                    paragraphModel.Range.Font.Size = 12;
-                    paragraphModel.Range.Font.Name = "Times New Roman";
-                    paragraphModel.Format.SpaceAfter = 10;
+                            word.Paragraph paragraphVin;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphVin = internalText.Content.Paragraphs.Add(ref hedef);
+                            string vinText = "Vin - " + txt_Vin.Text;
+                            paragraphVin.Range.Text = vinText;
+                            paragraphVin.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphVin.Range.Font.Bold = 0;
+                            paragraphVin.Range.Font.Size = 12;
+                            paragraphVin.Range.Font.Name = "Times New Roman";
+                            paragraphVin.Format.SpaceAfter = spaceAfter;
 
-                    object objModelStart = paragraphModel.Range.Start;
-                    object objModelEnd = paragraphModel.Range.Start + modelText.IndexOf("-");
-                    word.Range rngModelBold = internalText.Range(ref objModelStart, ref objModelEnd);
-                    rngModelBold.Bold = 1;
+                            object objVinStart = paragraphVin.Range.Start;
+                            object objVinEnd = paragraphVin.Range.Start + vinText.IndexOf("-");
+                            word.Range rngVinBold = internalText.Range(ref objVinStart, ref objVinEnd);
+                            rngVinBold.Bold = 1;
 
-                    paragraphModel.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphEngine;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphEngine = internalText.Content.Paragraphs.Add(ref hedef);
-                    string engineText = "Müherrik - " + engine;
-                    paragraphEngine.Range.Text = engineText;
-                    paragraphEngine.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphEngine.Range.Font.Bold = 0;
-                    paragraphEngine.Range.Font.Size = 12;
-                    paragraphEngine.Range.Font.Name = "Times New Roman";
-                    paragraphEngine.Format.SpaceAfter = 10;
-
-                    object objEngineStart = paragraphEngine.Range.Start;
-                    object objEngineEnd = paragraphEngine.Range.Start + engineText.IndexOf("-");
-                    word.Range rngEngineBold = internalText.Range(ref objEngineStart, ref objEngineEnd);
-                    rngEngineBold.Bold = 1;
-
-                    paragraphEngine.Range.InsertParagraphAfter();
+                            paragraphVin.Range.InsertParagraphAfter();
 
 
-                    word.Paragraph paragraphPlate;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphPlate = internalText.Content.Paragraphs.Add(ref hedef);
-                    string plateText = "Nömrə - " + plate;
-                    paragraphPlate.Range.Font.Bold = 0;
-                    paragraphPlate.Range.Text = plateText;
-                    paragraphPlate.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphPlate.Range.Font.Size = 12;
-                    paragraphPlate.Range.Font.Name = "Times New Roman";
-                    paragraphPlate.Format.SpaceAfter = 10;
+                            word.Paragraph paragraphModel;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphModel = internalText.Content.Paragraphs.Add(ref hedef);
+                            string modelText = "Model - " + model;
+                            paragraphModel.Range.Text = modelText;
+                            paragraphModel.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphModel.Range.Font.Bold = 0;
+                            paragraphModel.Range.Font.Size = 12;
+                            paragraphModel.Range.Font.Name = "Times New Roman";
+                            paragraphModel.Format.SpaceAfter = spaceAfter;
 
-                    object objPlateStart = paragraphPlate.Range.Start;
-                    object objPlateEnd = paragraphPlate.Range.Start + plateText.IndexOf("-");
-                    word.Range rngPlateBold = internalText.Range(ref objPlateStart, ref objPlateEnd);
-                    rngPlateBold.Bold = 1;
+                            object objModelStart = paragraphModel.Range.Start;
+                            object objModelEnd = paragraphModel.Range.Start + modelText.IndexOf("-");
+                            word.Range rngModelBold = internalText.Range(ref objModelStart, ref objModelEnd);
+                            rngModelBold.Bold = 1;
 
-                    paragraphPlate.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphDescription;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDescription = internalText.Content.Paragraphs.Add(ref hedef);
-                    string descText = "İzahı - " + txt_Description.Text;
-                    paragraphDescription.Range.Font.Bold = 0;
-                    paragraphDescription.Range.Text = descText;
-                    paragraphDescription.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDescription.Range.Font.Size = 12;
-                    paragraphDescription.Range.Font.Name = "Times New Roman";
-                    paragraphDescription.Format.SpaceAfter = 10;
-
-                    object objDescStart = paragraphDescription.Range.Start;
-                    object objDescEnd = paragraphDescription.Range.Start + descText.IndexOf("-");
-                    word.Range rngDescBold = internalText.Range(ref objDescStart, ref objDescEnd);
-                    rngDescBold.Bold = 1;
-
-                    paragraphDescription.Range.InsertParagraphAfter();
+                            paragraphModel.Range.InsertParagraphAfter();
 
 
-                    word.Paragraph paragraphDTCHeading;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDTCHeading = internalText.Content.Paragraphs.Add(ref hedef);
-                    paragraphDTCHeading.Range.Font.Bold = 1;
-                    paragraphDTCHeading.Range.Text = "All DTC";
-                    paragraphDTCHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDTCHeading.Range.Font.Size = 12;
-                    paragraphDTCHeading.Range.Font.Name = "Times New Roman";
-                    paragraphDTCHeading.Format.SpaceAfter = 10;
-                    paragraphDTCHeading.Range.InsertParagraphAfter();
+                            word.Paragraph paragraphEngine;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphEngine = internalText.Content.Paragraphs.Add(ref hedef);
+                            string engineText = "Müherrik - " + engine;
+                            paragraphEngine.Range.Text = engineText;
+                            paragraphEngine.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphEngine.Range.Font.Bold = 0;
+                            paragraphEngine.Range.Font.Size = 12;
+                            paragraphEngine.Range.Font.Name = "Times New Roman";
+                            paragraphEngine.Format.SpaceAfter = spaceAfter;
+
+                            object objEngineStart = paragraphEngine.Range.Start;
+                            object objEngineEnd = paragraphEngine.Range.Start + engineText.IndexOf("-");
+                            word.Range rngEngineBold = internalText.Range(ref objEngineStart, ref objEngineEnd);
+                            rngEngineBold.Bold = 1;
+
+                            paragraphEngine.Range.InsertParagraphAfter();
 
 
+                            word.Paragraph paragraphPlate;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphPlate = internalText.Content.Paragraphs.Add(ref hedef);
+                            string plateText = "Nömrə - " + plate;
+                            paragraphPlate.Range.Font.Bold = 0;
+                            paragraphPlate.Range.Text = plateText;
+                            paragraphPlate.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphPlate.Range.Font.Size = 12;
+                            paragraphPlate.Range.Font.Name = "Times New Roman";
+                            paragraphPlate.Format.SpaceAfter = spaceAfter;
 
-                    word.Paragraph paragraphDTC;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDTC = internalText.Content.Paragraphs.Add(ref hedef);
-                    paragraphDTC.Range.Font.Bold = 0;
-                    paragraphDTC.Range.Text = dtcFileText;
-                    paragraphDTC.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDTC.Range.Font.Size = 12;
-                    paragraphDTC.Range.Font.Name = "Times New Roman";
-                    paragraphDTC.Format.SpaceAfter = 1;
-                    paragraphDTC.Range.InsertParagraphAfter();
 
-                    string savePath = @"C:\ClientManagementDocuments\document" + DateTime.Now.ToShortDateString() + ".docx";
-                    
-                    internalText.SaveAs2(savePath);
+                            object objPlateStart = paragraphPlate.Range.Start;
+                            object objPlateEnd = paragraphPlate.Range.Start + plateText.IndexOf("-");
+                            word.Range rngPlateBold = internalText.Range(ref objPlateStart, ref objPlateEnd);
+                            rngPlateBold.Bold = 1;
 
-                    oWord.Quit();
-                    
-                    System.Diagnostics.Process.Start(savePath);
+                            paragraphPlate.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphDistance;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDistance = internalText.Content.Paragraphs.Add(ref hedef);
+                            string distanceText = "Yürüş - " + distance;
+                            paragraphDistance.Range.Font.Bold = 0;
+                            paragraphDistance.Range.Text = distanceText;
+                            paragraphDistance.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDistance.Range.Font.Size = 12;
+                            paragraphDistance.Range.Font.Name = "Times New Roman";
+                            paragraphDistance.Format.SpaceAfter = spaceAfter;
+
+                            object objDistanceStart = paragraphDistance.Range.Start;
+                            object objDistanceEnd = paragraphDistance.Range.Start + distanceText.IndexOf("-");
+                            word.Range rngDistanceBold = internalText.Range(ref objDistanceStart, ref objDistanceEnd);
+                            rngDistanceBold.Bold = 1;
+
+                            paragraphDistance.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphDescription;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDescription = internalText.Content.Paragraphs.Add(ref hedef);
+                            string descText = "İzahı - " + txt_Description.Text;
+                            paragraphDescription.Range.Font.Bold = 0;
+                            paragraphDescription.Range.Text = descText;
+                            paragraphDescription.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDescription.Range.Font.Size = 12;
+                            paragraphDescription.Range.Font.Name = "Times New Roman";
+                            paragraphDescription.Format.SpaceAfter = 10;
+
+                            object objDescStart = paragraphDescription.Range.Start;
+                            object objDescEnd = paragraphDescription.Range.Start + descText.IndexOf("-");
+                            word.Range rngDescBold = internalText.Range(ref objDescStart, ref objDescEnd);
+                            rngDescBold.Bold = 1;
+
+                            paragraphDescription.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphDTCHeading;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDTCHeading = internalText.Content.Paragraphs.Add(ref hedef);
+                            paragraphDTCHeading.Range.Font.Bold = 1;
+                            paragraphDTCHeading.Range.Text = "All DIAGNOSTIC TROUBLE CODE";
+                            paragraphDTCHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDTCHeading.Range.Font.Size = 12;
+                            paragraphDTCHeading.Range.Font.Name = "Times New Roman";
+                            paragraphDTCHeading.Format.SpaceAfter = 0;
+                            paragraphDTCHeading.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphDTC;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDTC = internalText.Content.Paragraphs.Add(ref hedef);
+                            paragraphDTC.Range.Font.Bold = 0;
+                            paragraphDTC.Range.Text = dtcFileText;
+                            paragraphDTC.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDTC.Range.Font.Size = 12;
+                            paragraphDTC.Range.Font.Name = "Times New Roman";
+                            paragraphDTC.Format.SpaceAfter = 0;
+                            paragraphDTC.Range.InsertParagraphAfter();
+
+                            string savePath = @"C:\ClientManagementDocuments\document" + DateTime.Now.ToString("ddMMyyyyhhmmss") + ".docx";
+
+                            internalText.SaveAs2(savePath);
+
+                            oWord.Quit();
+
+                            System.Diagnostics.Process.Start(savePath);
+                            btnPrint.Enabled = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            btnPrint.Enabled = true;
+                            MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        int spaceAfter = 6;
+                        try
+                        {
+                            object omissing = Missing.Value;
+
+                            object dokumansonu = "\\endofdoc";
+
+                            word.Application oWord;
+                            word.Document internalText;
+
+                            oWord = new word.Application();
+                            oWord.Visible = false;
+                            internalText = oWord.Documents.Add(ref omissing);
+
+                            word.Paragraph paragraphHeading;
+                            paragraphHeading = internalText.Content.Paragraphs.Add(ref omissing);
+                            paragraphHeading.Range.Text = "FORD Club Azerbaijan";
+                            paragraphHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphCenter;
+                            paragraphHeading.Range.Font.Bold = 1;
+                            paragraphHeading.Range.Font.Size = 20;
+                            paragraphHeading.Range.Font.Name = "Times New Roman";
+                            paragraphHeading.Format.SpaceAfter = spaceAfter;
+                            paragraphHeading.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphResult;
+                            object hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphResult = internalText.Content.Paragraphs.Add(ref hedef);
+                            paragraphResult.Range.Text = "Diaqnostika Nəticəsi:";
+                            paragraphResult.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphResult.Range.Font.Bold = 1;
+                            paragraphResult.Range.Font.Size = 16;
+                            paragraphResult.Range.Font.Name = "Times New Roman";
+                            paragraphResult.Format.SpaceAfter = spaceAfter;
+                            paragraphResult.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphDateTime;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDateTime = internalText.Content.Paragraphs.Add(ref hedef);
+                            string timeText = "Tarix - " + DateTime.Now;
+                            paragraphDateTime.Range.Text = timeText;
+                            paragraphDateTime.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDateTime.Range.Font.Bold = 0;
+                            paragraphDateTime.Range.Font.Size = 12;
+                            paragraphDateTime.Range.Font.Name = "Times New Roman";
+                            paragraphDateTime.Format.SpaceAfter = spaceAfter;
+
+                            object objTimeStart = paragraphDateTime.Range.Start;
+                            object objTimeEnd = paragraphDateTime.Range.Start + timeText.IndexOf("-");
+                            word.Range rngTimeBold = internalText.Range(ref objTimeStart, ref objTimeEnd);
+                            rngTimeBold.Bold = 1;
+
+                            paragraphDateTime.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphName;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphName = internalText.Content.Paragraphs.Add(ref hedef);
+                            string nameText = "Ad - " + name;
+                            paragraphName.Range.Text = nameText;
+                            paragraphName.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphName.Range.Font.Bold = 0;
+                            paragraphName.Range.Font.Size = 12;
+                            paragraphName.Range.Font.Name = "Times New Roman";
+                            paragraphName.Format.SpaceAfter = spaceAfter;
+
+                            object objNameStart = paragraphName.Range.Start;
+                            object objNameEnd = paragraphName.Range.Start + nameText.IndexOf("-");
+                            word.Range rngNameBold = internalText.Range(ref objNameStart, ref objNameEnd);
+                            rngNameBold.Bold = 1;
+
+                            paragraphName.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphPhone;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphPhone = internalText.Content.Paragraphs.Add(ref hedef);
+                            string phoneText = "Tel - " + phone;
+                            paragraphPhone.Range.Text = phoneText;
+                            paragraphPhone.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphPhone.Range.Font.Bold = 0;
+                            paragraphPhone.Range.Font.Size = 12;
+                            paragraphPhone.Range.Font.Name = "Times New Roman";
+                            paragraphPhone.Format.SpaceAfter = spaceAfter;
+
+                            object objPhoneStart = paragraphPhone.Range.Start;
+                            object objPhoneEnd = paragraphPhone.Range.Start + phoneText.IndexOf("-");
+                            word.Range rngPhoneBold = internalText.Range(ref objPhoneStart, ref objPhoneEnd);
+                            rngPhoneBold.Bold = 1;
+
+                            paragraphPhone.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphVin;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphVin = internalText.Content.Paragraphs.Add(ref hedef);
+                            string vinText = "Vin - " + txt_Vin.Text;
+                            paragraphVin.Range.Text = vinText;
+                            paragraphVin.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphVin.Range.Font.Bold = 0;
+                            paragraphVin.Range.Font.Size = 12;
+                            paragraphVin.Range.Font.Name = "Times New Roman";
+                            paragraphVin.Format.SpaceAfter = spaceAfter;
+
+                            object objVinStart = paragraphVin.Range.Start;
+                            object objVinEnd = paragraphVin.Range.Start + vinText.IndexOf("-");
+                            word.Range rngVinBold = internalText.Range(ref objVinStart, ref objVinEnd);
+                            rngVinBold.Bold = 1;
+
+                            paragraphVin.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphModel;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphModel = internalText.Content.Paragraphs.Add(ref hedef);
+                            string modelText = "Model - " + model;
+                            paragraphModel.Range.Text = modelText;
+                            paragraphModel.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphModel.Range.Font.Bold = 0;
+                            paragraphModel.Range.Font.Size = 12;
+                            paragraphModel.Range.Font.Name = "Times New Roman";
+                            paragraphModel.Format.SpaceAfter = spaceAfter;
+
+                            object objModelStart = paragraphModel.Range.Start;
+                            object objModelEnd = paragraphModel.Range.Start + modelText.IndexOf("-");
+                            word.Range rngModelBold = internalText.Range(ref objModelStart, ref objModelEnd);
+                            rngModelBold.Bold = 1;
+
+                            paragraphModel.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphEngine;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphEngine = internalText.Content.Paragraphs.Add(ref hedef);
+                            string engineText = "Müherrik - " + engine;
+                            paragraphEngine.Range.Text = engineText;
+                            paragraphEngine.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphEngine.Range.Font.Bold = 0;
+                            paragraphEngine.Range.Font.Size = 12;
+                            paragraphEngine.Range.Font.Name = "Times New Roman";
+                            paragraphEngine.Format.SpaceAfter = spaceAfter;
+
+                            object objEngineStart = paragraphEngine.Range.Start;
+                            object objEngineEnd = paragraphEngine.Range.Start + engineText.IndexOf("-");
+                            word.Range rngEngineBold = internalText.Range(ref objEngineStart, ref objEngineEnd);
+                            rngEngineBold.Bold = 1;
+
+                            paragraphEngine.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphPlate;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphPlate = internalText.Content.Paragraphs.Add(ref hedef);
+                            string plateText = "Nömrə - " + plate;
+                            paragraphPlate.Range.Font.Bold = 0;
+                            paragraphPlate.Range.Text = plateText;
+                            paragraphPlate.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphPlate.Range.Font.Size = 12;
+                            paragraphPlate.Range.Font.Name = "Times New Roman";
+                            paragraphPlate.Format.SpaceAfter = spaceAfter;
+
+                            object objPlateStart = paragraphPlate.Range.Start;
+                            object objPlateEnd = paragraphPlate.Range.Start + plateText.IndexOf("-");
+                            word.Range rngPlateBold = internalText.Range(ref objPlateStart, ref objPlateEnd);
+                            rngPlateBold.Bold = 1;
+
+                            paragraphPlate.Range.InsertParagraphAfter();
+
+                            word.Paragraph paragraphDistance;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDistance = internalText.Content.Paragraphs.Add(ref hedef);
+                            string distanceText = "Yürüş - " + distance;
+                            paragraphDistance.Range.Font.Bold = 0;
+                            paragraphDistance.Range.Text = distanceText;
+                            paragraphDistance.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDistance.Range.Font.Size = 12;
+                            paragraphDistance.Range.Font.Name = "Times New Roman";
+                            paragraphDistance.Format.SpaceAfter = spaceAfter;
+
+                            object objDistanceStart = paragraphDistance.Range.Start;
+                            object objDistanceEnd = paragraphDistance.Range.Start + distanceText.IndexOf("-");
+                            word.Range rngDistanceBold = internalText.Range(ref objDistanceStart, ref objDistanceEnd);
+                            rngDistanceBold.Bold = 1;
+
+                            paragraphDistance.Range.InsertParagraphAfter();
+
+
+                            word.Paragraph paragraphDescription;
+                            hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
+                            paragraphDescription = internalText.Content.Paragraphs.Add(ref hedef);
+                            string descText = "İzahı - " + txt_Description.Text;
+                            paragraphDescription.Range.Font.Bold = 0;
+                            paragraphDescription.Range.Text = descText;
+                            paragraphDescription.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
+                            paragraphDescription.Range.Font.Size = 12;
+                            paragraphDescription.Range.Font.Name = "Times New Roman";
+                            paragraphDescription.Format.SpaceAfter = spaceAfter;
+
+                            object objDescStart = paragraphDescription.Range.Start;
+                            object objDescEnd = paragraphDescription.Range.Start + descText.IndexOf("-");
+                            word.Range rngDescBold = internalText.Range(ref objDescStart, ref objDescEnd);
+                            rngDescBold.Bold = 1;
+
+                            paragraphDescription.Range.InsertParagraphAfter();
+
+                            string savePath = @"C:\ClientManagementDocuments\document" + DateTime.Now.ToString("ddMMyyyyhhmmss") + ".docx";
+
+                            internalText.SaveAs2(savePath);
+
+                            oWord.Quit();
+
+                            System.Diagnostics.Process.Start(savePath);
+                            btnPrint.Enabled = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            btnPrint.Enabled = true;
+                            MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
                 }
                 else
                 {
-                    object omissing = Missing.Value;
-
-                    object dokumansonu = "\\endofdoc";
-
-                    word.Application oWord;
-                    word.Document internalText;
-
-                    oWord = new word.Application();
-                    oWord.Visible = false;
-                    internalText = oWord.Documents.Add(ref omissing);
-
-                    word.Paragraph paragraphHeading;
-                    paragraphHeading = internalText.Content.Paragraphs.Add(ref omissing);
-                    paragraphHeading.Range.Text = "FORD Club Azerbaijan";
-                    paragraphHeading.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphCenter;
-                    paragraphHeading.Range.Font.Bold = 1;
-                    paragraphHeading.Range.Font.Size = 20;
-                    paragraphHeading.Range.Font.Name = "Times New Roman";
-                    paragraphHeading.Format.SpaceAfter = 10;
-                    paragraphHeading.Range.InsertParagraphAfter();
-
-                    word.Paragraph paragraphResult;
-                    object hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphResult = internalText.Content.Paragraphs.Add(ref hedef);
-                    paragraphResult.Range.Text = "Diaqnostika Nəticəsi:";
-                    paragraphResult.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphResult.Range.Font.Bold = 1;
-                    paragraphResult.Range.Font.Size = 16;
-                    paragraphResult.Range.Font.Name = "Times New Roman";
-                    paragraphResult.Format.SpaceAfter = 10;
-                    paragraphResult.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphDateTime;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDateTime = internalText.Content.Paragraphs.Add(ref hedef);
-                    string timeText = "Tarix - " + DateTime.Now;
-                    paragraphDateTime.Range.Text = timeText;
-                    paragraphDateTime.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDateTime.Range.Font.Bold = 0;
-                    paragraphDateTime.Range.Font.Size = 12;
-                    paragraphDateTime.Range.Font.Name = "Times New Roman";
-                    paragraphDateTime.Format.SpaceAfter = 10;
-
-                    object objTimeStart = paragraphDateTime.Range.Start;
-                    object objTimeEnd = paragraphDateTime.Range.Start + timeText.IndexOf("-");
-                    word.Range rngTimeBold = internalText.Range(ref objTimeStart, ref objTimeEnd);
-                    rngTimeBold.Bold = 1;
-
-                    paragraphDateTime.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphName;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphName = internalText.Content.Paragraphs.Add(ref hedef);
-                    string nameText = "Ad - " + name;
-                    paragraphName.Range.Text = nameText;
-                    paragraphName.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphName.Range.Font.Bold = 0;
-                    paragraphName.Range.Font.Size = 12;
-                    paragraphName.Range.Font.Name = "Times New Roman";
-                    paragraphName.Format.SpaceAfter = 10;
-
-                    object objNameStart = paragraphName.Range.Start;
-                    object objNameEnd = paragraphName.Range.Start + nameText.IndexOf("-");
-                    word.Range rngNameBold = internalText.Range(ref objNameStart, ref objNameEnd);
-                    rngNameBold.Bold = 1;
-
-                    paragraphName.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphPhone;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphPhone = internalText.Content.Paragraphs.Add(ref hedef);
-                    string phoneText = "Tel - " + phone;
-                    paragraphPhone.Range.Text = phoneText;
-                    paragraphPhone.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphPhone.Range.Font.Bold = 0;
-                    paragraphPhone.Range.Font.Size = 12;
-                    paragraphPhone.Range.Font.Name = "Times New Roman";
-                    paragraphPhone.Format.SpaceAfter = 10;
-
-                    object objPhoneStart = paragraphPhone.Range.Start;
-                    object objPhoneEnd = paragraphPhone.Range.Start + phoneText.IndexOf("-");
-                    word.Range rngPhoneBold = internalText.Range(ref objPhoneStart, ref objPhoneEnd);
-                    rngPhoneBold.Bold = 1;
-
-                    paragraphPhone.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphVin;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphVin = internalText.Content.Paragraphs.Add(ref hedef);
-                    string vinText = "Vin - " + txt_Vin.Text;
-                    paragraphVin.Range.Text = vinText;
-                    paragraphVin.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphVin.Range.Font.Bold = 0;
-                    paragraphVin.Range.Font.Size = 12;
-                    paragraphVin.Range.Font.Name = "Times New Roman";
-                    paragraphVin.Format.SpaceAfter = 10;
-
-                    object objVinStart = paragraphVin.Range.Start;
-                    object objVinEnd = paragraphVin.Range.Start + vinText.IndexOf("-");
-                    word.Range rngVinBold = internalText.Range(ref objVinStart, ref objVinEnd);
-                    rngVinBold.Bold = 1;
-
-                    paragraphVin.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphModel;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphModel = internalText.Content.Paragraphs.Add(ref hedef);
-                    string modelText = "Model - " + model;
-                    paragraphModel.Range.Text = modelText;
-                    paragraphModel.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphModel.Range.Font.Bold = 0;
-                    paragraphModel.Range.Font.Size = 12;
-                    paragraphModel.Range.Font.Name = "Times New Roman";
-                    paragraphModel.Format.SpaceAfter = 10;
-
-                    object objModelStart = paragraphModel.Range.Start;
-                    object objModelEnd = paragraphModel.Range.Start + modelText.IndexOf("-");
-                    word.Range rngModelBold = internalText.Range(ref objModelStart, ref objModelEnd);
-                    rngModelBold.Bold = 1;
-
-                    paragraphModel.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphEngine;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphEngine = internalText.Content.Paragraphs.Add(ref hedef);
-                    string engineText = "Müherrik - " + engine;
-                    paragraphEngine.Range.Text = engineText;
-                    paragraphEngine.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphEngine.Range.Font.Bold = 0;
-                    paragraphEngine.Range.Font.Size = 12;
-                    paragraphEngine.Range.Font.Name = "Times New Roman";
-                    paragraphEngine.Format.SpaceAfter = 10;
-
-                    object objEngineStart = paragraphEngine.Range.Start;
-                    object objEngineEnd = paragraphEngine.Range.Start + engineText.IndexOf("-");
-                    word.Range rngEngineBold = internalText.Range(ref objEngineStart, ref objEngineEnd);
-                    rngEngineBold.Bold = 1;
-
-                    paragraphEngine.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphPlate;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphPlate = internalText.Content.Paragraphs.Add(ref hedef);
-                    string plateText = "Nömrə - " + plate;
-                    paragraphPlate.Range.Font.Bold = 0;
-                    paragraphPlate.Range.Text = plateText;
-                    paragraphPlate.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphPlate.Range.Font.Size = 12;
-                    paragraphPlate.Range.Font.Name = "Times New Roman";
-                    paragraphPlate.Format.SpaceAfter = 10;
-
-                    object objPlateStart = paragraphPlate.Range.Start;
-                    object objPlateEnd = paragraphPlate.Range.Start + plateText.IndexOf("-");
-                    word.Range rngPlateBold = internalText.Range(ref objPlateStart, ref objPlateEnd);
-                    rngPlateBold.Bold = 1;
-
-                    paragraphPlate.Range.InsertParagraphAfter();
-
-
-                    word.Paragraph paragraphDescription;
-                    hedef = internalText.Bookmarks.get_Item(ref dokumansonu).Range;
-                    paragraphDescription = internalText.Content.Paragraphs.Add(ref hedef);
-                    string descText = "İzahı - " + txt_Description.Text;
-                    paragraphDescription.Range.Font.Bold = 0;
-                    paragraphDescription.Range.Text = descText;
-                    paragraphDescription.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-                    paragraphDescription.Range.Font.Size = 12;
-                    paragraphDescription.Range.Font.Name = "Times New Roman";
-                    paragraphDescription.Format.SpaceAfter = 10;
-
-                    object objDescStart = paragraphDescription.Range.Start;
-                    object objDescEnd = paragraphDescription.Range.Start + descText.IndexOf("-");
-                    word.Range rngDescBold = internalText.Range(ref objDescStart, ref objDescEnd);
-                    rngDescBold.Bold = 1;
-
-                    paragraphDescription.Range.InsertParagraphAfter();                   
-
-                    string savePath = @"C:\ClientManagementDocuments\document" + DateTime.Now.ToString() + ".docx";
-
-                    internalText.SaveAs2(savePath);
-
-                    oWord.Quit();
-
-                    System.Diagnostics.Process.Start(savePath);
+                    btnPrint.Enabled = true;
+                    MessageBox.Show("Please, Select client!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
             }
+            catch (Exception ex)
+            {
+                btnPrint.Enabled = true;
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #region Importtant sql
+        private void button1_Click(object sender, EventArgs e)
+        {
+            SqlConnection connection = AbstractDAO.Connect();
+            try
+            {
+                Clear();
+                CDGridView.Rows.Clear();
+
+                connection.Open();
+                string query = "select Cars_tbl.Id, " +
+                    "Description_tbl.Description, Description_tbl.Datetime from Cars_tbl, Description_tbl " +
+                    "where Cars_tbl.Id = Description_tbl.CarId";
+
+
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader dataReader = cmd.ExecuteReader();
+
+
+                int index = 0;
+
+
+                while (dataReader.Read())
+                {
+                    index = CDGridView.Rows.Add();
+                    CDGridView.Rows[index].Cells[0].Value = dataReader["Id"].ToString();
+                    CDGridView.Rows[index].Cells[8].Value = dataReader["Description"].ToString();
+                    CDGridView.Rows[index].Cells[10].Value = dataReader["Datetime"].ToString();
+                }
+                connection.Close();
+
+                lblTotalCount.Text = GetTotal().ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            int id;
+            string description = "";
+            string distance = "";
+            DateTime dateTime;
+
+            int index = default;
+            List<TestFord> testFords = new List<TestFord>();
+            //int row = 0;
+            for (int i = 242; i < CDGridView.RowCount; i++)
+            {
+                id = Convert.ToInt32(CDGridView.Rows[i].Cells[0].Value);
+                description = CDGridView.Rows[i].Cells[8].Value.ToString();
+                dateTime = DateTime.Parse(CDGridView.Rows[i].Cells[10].Value.ToString());
+
+
+                index = description.IndexOf("-km");
+                if (index != -1)
+                {
+                    distance = description.Substring(0, index);
+                    description = description.Remove(0, index + 4);
+                }
+                testFords.Add(new TestFord(id, distance, description, dateTime));
+            }
+
+            SqlConnection connection = AbstractDAO.Connect();
+            connection.Open();
+            SqlCommand cmd3;
+            //string query3 = "Update Description_tbl Set Description = @desc, Distance = @distance  Where CarId=@id and Datetime = @datetime";
+            string query2 = "Update Description_tbl Set Description = @desc, Distance = @distance Where Datetime = @datetime";
+            cmd3 = new SqlCommand(query2, connection);
+
+            for (int i = 0; i < testFords.Count; i++)
+            {
+                try
+                {
+                    cmd3.Parameters.AddWithValue("carId", testFords[i].id);
+                    cmd3.Parameters.AddWithValue("@datetime", testFords[i].dateTime);
+                    cmd3.Parameters.AddWithValue("@distance", testFords[i].distance);
+                    cmd3.Parameters.AddWithValue("@desc", testFords[i].description);
+
+                    //cmd3.Parameters.AddWithValue("carId", SqlDbType.Int).Value = testFords[i].id;
+                    //cmd3.Parameters.AddWithValue("@datetime", SqlDbType.DateTime).Value = testFords[i].dateTime;
+                    //cmd3.Parameters.AddWithValue("@distance", SqlDbType.Text).Value = testFords[i].distance;
+                    //cmd3.Parameters.AddWithValue("@desc", SqlDbType.Text).Value = testFords[i].description;
+
+
+                    cmd3.ExecuteNonQuery();
+                    cmd3.Parameters.Clear();
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //throw ex;
+                }
+                //finally
+                //{
+                //    connection.Close();
+                //}
+            }
+            connection.Close();
+
+            MessageBox.Show("Success");
+        }
+
+        #endregion
+
+        private void txt_Year_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            int asciiCode = Convert.ToInt32(e.KeyChar);
+
+            if (asciiCode != 8)
+            {
+                if ((asciiCode >= 47 && asciiCode <= 57))
+                {                    
+                    e.Handled = false;
+                }
+                else
+                {
+                    MessageBox.Show("Year correct variant Year/Month!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private bool DesignYearText(string year)
+        {
+            bool control = false;
+            if (txt_Year.Text.Length == 7)
+            {
+                if (txt_Year.Text[4] != '/')
+                {
+                    MessageBox.Show("Year correct variant Year/Month!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txt_Year.Text = string.Empty;
+                    control = true;
+                }                 
+            }
             else
             {
-                MessageBox.Show("Please, Select client!", "Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }          
-
-
-
-            //word.Paragraph paragraphTest;
-            //hedef = icerik.Bookmarks.get_Item(ref dokumansonu).Range;
-            //paragraphTest = icerik.Content.Paragraphs.Add(ref hedef);
-            //paragraphTest.Range.Text = "İzahı - " + txt_Description.Text;
-            //paragraphTest.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphLeft;
-            //paragraphTest.Range.Font.Bold = 0;
-            //paragraphTest.Range.Font.Size = 12;
-            //paragraphTest.Range.Font.Name = "Times New Roman";
-            //paragraphTest.Format.SpaceAfter = 10;
-            //paragraphTest.Range.InsertParagraphAfter();
-
-
-
-
-            //word.Paragraph paragraph4;
-            //hedef = icerik.Bookmarks.get_Item(ref dokumansonu).Range;
-            //paragraph4 = icerik.Content.Paragraphs.Add(ref hedef);
-            //paragraph4.Range.Text = "Birinci paraqraf";
-            //paragraph4.Range.ParagraphFormat.Alignment = word.WdParagraphAlignment.wdAlignParagraphCenter;
-            //paragraph4.Range.Font.Bold = 1;
-            //paragraph4.Range.Font.Name = "Arial";
-            //paragraph4.Format.SpaceAfter = 10;
-            //paragraph4.Range.InsertParagraphAfter();
-
-        }
-        private void printHomePageDocument_PrintPage(object sender, System.Drawing.Printing.PrintPageEventArgs e)
-        {
-            string name;
-            string phone;
-            string model;
-            string engine;
-            string plate;
-            string distance;
-
-            name = txt_Name.Text;
-            phone = txt_Phone.Text;
-            model = txt_Model.Text;
-            engine = txt_Engine.Text;
-            plate = txt_Carplatenumber.Text;
-            distance = txt_Distance.Text;
-
-            if (name == "")
-            {
-                name = "Null";
+                control = false;
             }
-
-            if (phone == "")
-            {
-                phone = "Null";
-            }
-
-            if (model == "")
-            {
-                model = "Null";
-            }
-
-            if (engine == "")
-            {
-                engine = "Null";
-            }
-
-            if (plate == "")
-            {
-                plate = "Null";
-            }
-
-            if (distance == "")
-            {
-                distance = "Null";
-            }
-
-            e.Graphics.DrawString("FORD Club Azerbaijan ", new Font("Arial", 16, FontStyle.Bold), Brushes.Black, new Point(240, 20));
-
-            e.Graphics.DrawString("Diaqnostika Nəticəsi", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, new Point(240, 80));
-
-            e.Graphics.DrawString("-----------------------------------------------------------------------------------------------------------------------------------------------------", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, new Point(10, 100));
-
-            e.Graphics.DrawString("Tarix - " + DateTime.Now.ToString(), new Font("Arial", 12, FontStyle.Bold), Brushes.Black, new Point(10, 120));
-
-            e.Graphics.DrawString("Ad - " + name, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 140));
-
-            e.Graphics.DrawString("Tel: - " + phone, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 170));
-
-            e.Graphics.DrawString("Vin - " + txt_Vin.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 200));
-
-            e.Graphics.DrawString("Model - " + model, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 230));
-
-            e.Graphics.DrawString("Müherrik - " + engine, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 260));
-
-            e.Graphics.DrawString("Plate - " + plate, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 290));
-
-            e.Graphics.DrawString("Yüruş - " + distance, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 320));
-
-            e.Graphics.DrawString("İzahı - " + txt_Description.Text, new Font("Arial", 12, FontStyle.Regular), Brushes.Black, new Point(10, 350));
-
-
-        }
+            return control;
+        }       
     }
+
 }
+
+

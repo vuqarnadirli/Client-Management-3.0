@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="DataSetHome" targetNamespace="http://tempuri.org/DataSetHome.xsd" xmlns:mstns="http://tempuri.org/DataSetHome.xsd" xmlns="http://tempuri.org/DataSetHome.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections>
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="ClientDatabaseManagementSystemConnectionString" ConnectionStringObject="" IsAppSettingsProperty="true" Modifier="Assembly" Name="ClientDatabaseManagementSystemConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.Client_Management_2._1.Properties.Settings.GlobalReference.Default.ClientDatabaseManagementSystemConnectionString" Provider="System.Data.SqlClient" />
+        </Connections>
+        <Tables>
+          <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="DataTableHomeTableAdapter" GeneratorDataComponentClassName="DataTableHomeTableAdapter" Name="DataTableHome" UserDataComponentName="DataTableHomeTableAdapter">
+            <MainSource>
+              <DbSource ConnectionRef="ClientDatabaseManagementSystemConnectionString (Settings)" DbObjectType="Unknown" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="false" GeneratorGetMethodName="GetAllData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetAllData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="false" UserGetMethodName="GetAllData" UserSourceName="Fill">
+                <SelectCommand>
+                  <DbCommand CommandType="Text" ModifiedByUser="true">
+                    <CommandText>SELECT        TOP (200) Cars_tbl.Id, Cars_tbl.Name, Cars_tbl.Phone, Cars_tbl.Vin, Cars_tbl.Model, Cars_tbl.Engine, Cars_tbl.Carplatenumber, Description_tbl.Distance, Cars_tbl.Year, Description_tbl.Description, Description_tbl.FileName, 
+                         Description_tbl.Datetime
+FROM            Cars_tbl INNER JOIN
+                         Description_tbl ON Cars_tbl.Id = Description_tbl.CarId
+ORDER BY Cars_tbl.Id DESC</CommandText>
+                    <Parameters />
+                  </DbCommand>
+                </SelectCommand>
+              </DbSource>
+            </MainSource>
+            <Mappings>
+              <Mapping SourceColumn="Id" DataSetColumn="Id" />
+              <Mapping SourceColumn="Name" DataSetColumn="Name" />
+              <Mapping SourceColumn="Phone" DataSetColumn="Phone" />
+              <Mapping SourceColumn="Vin" DataSetColumn="Vin" />
+              <Mapping SourceColumn="Model" DataSetColumn="Model" />
+              <Mapping SourceColumn="Engine" DataSetColumn="Engine" />
+              <Mapping SourceColumn="Carplatenumber" DataSetColumn="Carplatenumber" />
+              <Mapping SourceColumn="Distance" DataSetColumn="Distance" />
+              <Mapping SourceColumn="Year" DataSetColumn="Year" />
+              <Mapping SourceColumn="Description" DataSetColumn="Description" />
+              <Mapping SourceColumn="FileName" DataSetColumn="FileName" />
+              <Mapping SourceColumn="Datetime" DataSetColumn="Datetime" />
+            </Mappings>
+            <Sources />
+          </TableAdapter>
+        </Tables>
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="DataSetHome" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="DataSetHome" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="DataSetHome">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="DataTableHome" msprop:Generator_RowEvHandlerName="DataTableHomeRowChangeEventHandler" msprop:Generator_RowDeletedName="DataTableHomeRowDeleted" msprop:Generator_RowDeletingName="DataTableHomeRowDeleting" msprop:Generator_RowEvArgName="DataTableHomeRowChangeEvent" msprop:Generator_TablePropName="DataTableHome" msprop:Generator_RowChangedName="DataTableHomeRowChanged" msprop:Generator_UserTableName="DataTableHome" msprop:Generator_RowChangingName="DataTableHomeRowChanging" msprop:Generator_RowClassName="DataTableHomeRow" msprop:Generator_TableClassName="DataTableHomeDataTable" msprop:Generator_TableVarName="tableDataTableHome">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnPropNameInTable="IdColumn" msprop:Generator_ColumnPropNameInRow="Id" msprop:Generator_UserColumnName="Id" msprop:Generator_ColumnVarNameInTable="columnId" type="xs:int" />
+              <xs:element name="Name" msprop:Generator_ColumnPropNameInTable="NameColumn" msprop:Generator_ColumnPropNameInRow="Name" msprop:Generator_UserColumnName="Name" msprop:Generator_ColumnVarNameInTable="columnName" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Phone" msprop:Generator_ColumnPropNameInTable="PhoneColumn" msprop:Generator_ColumnPropNameInRow="Phone" msprop:Generator_UserColumnName="Phone" msprop:Generator_ColumnVarNameInTable="columnPhone" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Vin" msprop:Generator_ColumnPropNameInTable="VinColumn" msprop:Generator_ColumnPropNameInRow="Vin" msprop:Generator_UserColumnName="Vin" msprop:Generator_ColumnVarNameInTable="columnVin">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="17" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Model" msprop:Generator_ColumnPropNameInTable="ModelColumn" msprop:Generator_ColumnPropNameInRow="Model" msprop:Generator_UserColumnName="Model" msprop:Generator_ColumnVarNameInTable="columnModel" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Engine" msprop:Generator_ColumnPropNameInTable="EngineColumn" msprop:Generator_ColumnPropNameInRow="Engine" msprop:Generator_UserColumnName="Engine" msprop:Generator_ColumnVarNameInTable="columnEngine" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Carplatenumber" msprop:Generator_ColumnPropNameInTable="CarplatenumberColumn" msprop:Generator_ColumnPropNameInRow="Carplatenumber" msprop:Generator_UserColumnName="Carplatenumber" msprop:Generator_ColumnVarNameInTable="columnCarplatenumber" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Distance" msprop:Generator_ColumnPropNameInTable="DistanceColumn" msprop:Generator_ColumnPropNameInRow="Distance" msprop:Generator_UserColumnName="Distance" msprop:Generator_ColumnVarNameInTable="columnDistance" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Year" msprop:Generator_ColumnPropNameInTable="YearColumn" msprop:Generator_ColumnPropNameInRow="Year" msprop:Generator_UserColumnName="Year" msprop:Generator_ColumnVarNameInTable="columnYear" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Description" msprop:Generator_ColumnPropNameInTable="DescriptionColumn" msprop:Generator_ColumnPropNameInRow="Description" msprop:Generator_UserColumnName="Description" msprop:Generator_ColumnVarNameInTable="columnDescription" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="2147483647" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="FileName" msprop:Generator_ColumnPropNameInTable="FileNameColumn" msprop:Generator_ColumnPropNameInRow="FileName" msprop:Generator_UserColumnName="FileName" msprop:Generator_ColumnVarNameInTable="columnFileName" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="Datetime" msprop:Generator_ColumnPropNameInTable="DatetimeColumn" msprop:Generator_ColumnPropNameInRow="Datetime" msprop:Generator_UserColumnName="Datetime" msprop:Generator_ColumnVarNameInTable="columnDatetime" type="xs:dateTime" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
